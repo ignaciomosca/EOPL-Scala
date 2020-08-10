@@ -8,7 +8,7 @@ ThisBuild / organizationName := "example"
 lazy val root = (project in file("."))
   .settings(
     name := "scala-let",
-    libraryDependencies += scalaTest % Test
-  )
+    libraryDependencies ++= Seq(scalaTest % Test, fastParse)
+)
 
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.
