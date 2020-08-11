@@ -68,7 +68,7 @@ object Expression {
 
   case class VarExpr(value: String) extends Expression
 
-  case class LetExpr(value: List[(String, Expression)]) extends Expression
+  case class LetExpr(name: String, exp: Expression, body: Expression) extends Expression
 
   case class LetStarExpr(value: List[(String, Expression)]) extends Expression
 
@@ -82,9 +82,13 @@ object Expression {
 
   case class CondExpr(value: List[(Expression, Expression)]) extends Expression
 
+  case class Call(expr: Expression, args: Seq[Expression]) extends Expression
+
+  case class Plus(left: Expression, right:Expression) extends Expression
+
 }
 
-object Data {
+object Environment {
 
   type Environment = Map[String, ExpressedValue]
 
