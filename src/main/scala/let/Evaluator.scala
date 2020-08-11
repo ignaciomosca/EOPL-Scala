@@ -6,27 +6,27 @@ import let.Values.{BooleanValue, IntegerValue}
 
 object Evaluator {
 
-  def ev(expression: Expression, env: Environment): Values = expression match {
+  def evaluate(expression: Expression, env: Environment): Values = expression match {
     case Expression.ConstExpr(value) => value
     case Expression.VarExpr(value) => Environment.applyForce(env, value)
     case Expression.LetExpr(id, exp, body) =>
-      val evaluated = ev(exp, env)
+      val evaluated = evaluate(exp, env)
       val updatedEnvironment = Environment.extend(id,evaluated,env)
-      ev(body, updatedEnvironment)
+      evaluate(body, updatedEnvironment)
     case Expression.DiffExpr(exp1, exp2) =>
-      val eval1 = ev(exp1, env)
-      val eval2 = ev(exp2, env)
+      val eval1 = evaluate(exp1, env)
+      val eval2 = evaluate(exp2, env)
       Values.IntegerValue(toNum(eval1) - toNum(eval2))
     case Expression.ZeroExpr(exp) =>
-      val evalExpr = ev(exp, env)
+      val evalExpr = evaluate(exp, env)
       Values.BooleanValue(toNum(evalExpr) == 0)
     case Expression.CondExpr(ifExp, thenExp, elseExp) =>
-      val ifExpr = ev(ifExp, env)
-      if(toBool(ifExpr)) ev(thenExp, env) else ev(elseExp, env)
+      val ifExpr = evaluate(ifExp, env)
+      if(toBool(ifExpr)) evaluate(thenExp, env) else evaluate(elseExp, env)
   }
 
   def let(input: String): String = {
-    serialize(ev(fastparse.parse(input, Parser.expr(_)).get.value, Environment.empty))
+    serialize(evaluate(fastparse.parse(input, Parser.expr(_)).get.value, Environment.empty))
   }
 
   def serialize(v: Values): String = v match {
