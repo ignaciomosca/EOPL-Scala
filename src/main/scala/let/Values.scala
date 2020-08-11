@@ -8,8 +8,4 @@ object Values {
 
   case class BooleanValue(value: Boolean) extends Values
 
-  case class ExprList(value: List[Values]) extends Values
-
-  case object EmptyList extends Values
-
 }
