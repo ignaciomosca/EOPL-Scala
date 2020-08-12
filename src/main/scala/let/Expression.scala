@@ -16,4 +16,8 @@ object Expression {
 
   case class CondExpr(ifExp: Expression, thenExp: Expression, elseExp: Expression) extends Expression
 
+  case class ProcExpr(name: String, exp: Expression) extends Expression
+
+  case class CallExpr(exp1: Expression, exp2: Expression) extends Expression
+
 }

@@ -25,4 +25,11 @@ class EvaluatorSpec extends AnyFlatSpec with Matchers {
     val result = "1"
     Evaluator.let(input) shouldEqual result
   }
+
+  "Let" should "return correct value after a proc is defined and applied twice" in {
+    val input = "let f = proc (x) -(x, 11) in (f (f 77))"
+    val result = "55"
+    val environment = Environment.empty.updated("x", Values.IntegerValue(10))
+    Evaluator.let(input,environment) shouldEqual result
+  }
 }

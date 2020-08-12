@@ -5,7 +5,7 @@ import fastparse._
 
 object Parser {
 
-  def expr[_: P]: P[Expression] = P(const | diff | zero | ifExp | let | varExpr)
+  def expr[_: P]: P[Expression] = P(const | diff | zero | ifExp | let | proc | call | varExpr)
 
   def const[_: P] = P(num).map(Expression.ConstExpr)
 
@@ -22,5 +22,9 @@ object Parser {
   def let[_: P] = P( "let" ~/ str0 ~/ "=" ~/ expr ~/ "in" ~/ expr ).map(Expression.LetExpr.tupled)
 
   def diff[_: P] = P( "-" ~/ "(" ~ expr ~ "," ~ expr ~ ")" ).map(Expression.DiffExpr.tupled)
+
+  def proc[_: P] = P( "proc" ~/ "(" ~ str0 ~ ")" ~ expr ).map(Expression.ProcExpr.tupled)
+
+  def call[_: P] = P( "(" ~/ expr ~/ expr ~/ ")").map(Expression.CallExpr.tupled)
 
 }
