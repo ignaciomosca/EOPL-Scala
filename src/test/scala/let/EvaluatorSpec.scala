@@ -29,7 +29,27 @@ class EvaluatorSpec extends AnyFlatSpec with Matchers {
   "Let" should "return correct value after a proc is defined and applied twice" in {
     val input = "let f = proc (x) -(x, 11) in (f (f 77))"
     val result = "55"
-    val environment = Environment.empty.updated("x", Values.IntegerValue(10))
+    val environment = Environment.extend("x", Values.IntegerValue(10), Environment.empty)
     Evaluator.let(input,environment) shouldEqual result
+  }
+
+  "Let" should "test if then" in {
+    val input = "if zero?(x) then 0 else x"
+    val result = "0"
+    val environment = Environment.extend("x", Values.IntegerValue(0), Environment.empty)
+    Evaluator.let(input,environment) shouldEqual result
+  }
+
+  "Let" should "test if else" in {
+    val input = "if zero?(x) then 0 else x"
+    val result = "10"
+    val environment = Environment.extend("x", Values.IntegerValue(10), Environment.empty)
+    Evaluator.let(input,environment) shouldEqual result
+  }
+
+  "Let" should "return correct value after a letrec operation is applied" in {
+    val input = "letrec double(x) = if zero?(x) then 0 else -((double -(x,1)), -(0,2)) in (double 6)"
+    val result = "12"
+    Evaluator.let(input,Environment.empty) shouldEqual result
   }
 }

@@ -1,7 +1,5 @@
 package let
 
-import let.Environment.Environment
-
 sealed trait Values
 
 case class Procedure(name: String, exp: Expression, environment: Environment)
