@@ -15,6 +15,10 @@ object Expression {
 
   case class ZeroExpr(exp: Expression) extends Expression
 
+  case class NewRefExpr(exp: Expression) extends Expression
+  case class DeRefExpr(exp: Expression) extends Expression
+  case class SetRefExpr(exp1: Expression, exp2: Expression) extends Expression
+
   case class CondExpr(
       ifExp: Expression,
       thenExp: Expression,

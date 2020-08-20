@@ -52,4 +52,16 @@ class EvaluatorSpec extends AnyFlatSpec with Matchers {
     val result = "12"
     Evaluator.let(input,Environment.empty) shouldEqual result
   }
+
+  "Let" should "return correct value after a using refs" in {
+    val input = "let x = newref(newref(0)) in let dummy = setref(deref(x), 11) in deref(deref(x))"
+    val result = "11"
+    Evaluator.let(input,Environment.empty) shouldEqual result
+  }
+
+  "Let" should "return correct value after a using refs 2" in {
+    val input = "let x = newref(22) in let f = proc (z) let zz = newref(-(z, deref(x))) in deref(zz) in -((f 66), (f 55))"
+    val result = "11"
+    Evaluator.let(input,Environment.empty) shouldEqual result
+  }
 }
