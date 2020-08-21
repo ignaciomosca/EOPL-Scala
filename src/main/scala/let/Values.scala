@@ -12,7 +12,4 @@ object Values {
 
   case class ProcedureValue(value: Procedure) extends Values
 
-  case class RefValue(ref: Int) extends Values
-
-
 }

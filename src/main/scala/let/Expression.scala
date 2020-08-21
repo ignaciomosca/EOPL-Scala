@@ -15,10 +15,6 @@ object Expression {
 
   case class ZeroExpr(exp: Expression) extends Expression
 
-  case class NewRefExpr(exp: Expression) extends Expression
-  case class DeRefExpr(exp: Expression) extends Expression
-  case class SetRefExpr(exp1: Expression, exp2: Expression) extends Expression
-
   case class CondExpr(
       ifExp: Expression,
       thenExp: Expression,
@@ -30,10 +26,11 @@ object Expression {
   case class CallExpr(exp1: Expression, exp2: Expression) extends Expression
 
   case class LetrecExpr(
-      pname: String,
-      bvar: String,
-      pbody: Expression,
+      recProcs: List[RecProc],
       letrecBody: Expression
   ) extends Expression
+
+  case class BeginExpr(expressions: List[Expression]) extends Expression
+  case class AssignExpr(name: String, exp: Expression) extends Expression
 
 }

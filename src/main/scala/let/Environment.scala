@@ -2,46 +2,34 @@ package let
 
 import let.Values.ProcedureValue
 
-trait Environment
-case object Empty extends Environment
-case class Bind(idType: String, valueType: Values, environment: Environment)
-    extends Environment
-case class RecBind(
-    pname: String,
-    bvar: String,
-    pbody: Expression,
-    environment: Environment
-) extends Environment
+case class Environment(bindings: Map[String, Int])
 
 object Environment {
 
-  def empty: Environment = Empty
+  def empty: Environment = Environment(Map.empty)
 
   def extend(
-      element: String,
-      value: Values,
-      environment: Environment
+              element: String,
+              ref: Int,
+              environment: Environment
   ): Environment = {
-    Bind(element, value, environment)
+    val updatedEnvironment = environment.bindings.updated(element, ref)
+    Environment(updatedEnvironment)
   }
 
-  def extendRec(
-      pname: String,
-      bvar: String,
-      pbody: Expression,
-      environment: Environment
-  ): Environment = RecBind(pname, bvar, pbody, environment)
+  def extendRec(recProcs: List[(String, String, Expression)], env: Environment, store: Store[Values]) : (Environment, Store[Values]) = recProcs match {
+    case Nil => (env, store)
+    case (name,param,body)::next =>
+      val procedureValue = ProcedureValue(Procedure(param, body, env))
+      val (ref, updatedStore) = store.newRef(procedureValue)
+      val ext = extend(name, ref, env)
+      extendRec(next, ext, updatedStore)
+  }
 
-  def apply(env: Environment, variable: String, value: Values): Values =
-    env match {
-      case Empty => throw new Exception(s"$variable not found")
-      case Bind(idType, valueType, environment) =>
-        if (variable == idType) valueType
-        else apply(environment, variable, valueType)
-      case RecBind(pname, bvar, pbody, environment) =>
-        if (variable == pname) {
-          ProcedureValue(Procedure(bvar, pbody, env))
-        } else apply(environment, variable, value)
+  def apply(env: Environment, variable: String): Int =
+    env.bindings.get(variable) match {
+      case Some(value) => value
+      case None => throw new Exception(s"variable $variable not found")
     }
 
 }

@@ -6,7 +6,7 @@ import fastparse._
 object Parser {
 
   def expr[_: P]: P[Expression] =
-    P(const | diff | zero | newref | deref | setref | ifExp | letRec | let | proc | call | varExpr)
+    P(const | diff | zero | begin | assign | ifExp | letRec | let | proc | call | varExpr)
 
   def const[_: P] = P(num).map(Expression.ConstExpr)
 
@@ -31,14 +31,18 @@ object Parser {
     P("-" ~/ "(" ~ expr ~ "," ~ expr ~ ")").map(Expression.DiffExpr.tupled)
 
   def proc[_: P] =
-    P("proc" ~/ "(" ~ str0 ~ ")" ~ expr).map(Expression.ProcExpr.tupled)
+    P("proc" ~/ "(" ~ str0 ~ ")" ~/ expr).map(Expression.ProcExpr.tupled)
 
   def call[_: P] = P("(" ~/ expr ~/ expr ~/ ")").map(Expression.CallExpr.tupled)
 
-  def letRec[_: P] = P("letrec" ~/ str0 ~ "(" ~/ str0 ~/  ")" ~/ "=" ~ expr ~/ "in" ~ expr).map(Expression.LetrecExpr.tupled)
+  def letRec[_: P] = P("letrec" ~/ letRecAux.rep(1, ",") ~/ "in" ~ expr).map {
+    case (value, expression) => Expression.LetrecExpr(value.toList, expression)
+  }
 
-  def newref[_: P] = P("newref" ~ "(" ~/ expr ~/  ")").map(Expression.NewRefExpr)
-  def deref[_: P] = P("deref"  ~ "(" ~/ expr ~/  ")").map(Expression.DeRefExpr)
-  def setref[_: P] = P("setref" ~ "(" ~/ expr ~/ "," ~/ expr ~/ ")").map(Expression.SetRefExpr.tupled)
+  def letRecAux[_: P]:P[RecProc] = P(str0 ~/ "(" ~/ str0 ~/  ")" ~/ "=" ~ expr)
+
+  def begin[_: P] = P("begin" ~/ expr.rep(1, ";") ~/ "end").map(list => Expression.BeginExpr(list.toList))
+
+  def assign[_: P] = P("set" ~/ str0 ~/ "=" ~/ expr).map(Expression.AssignExpr.tupled)
 
 }
