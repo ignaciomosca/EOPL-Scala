@@ -1,6 +1,7 @@
 package let
 
-import let.Values.{BooleanValue, IntegerValue, ProcedureValue}
+import let.Expression._
+import let.Values.{BooleanValue, IntegerValue, PairValue, ProcedureValue, RefValue}
 
 object Evaluator {
 
@@ -38,6 +39,32 @@ object Evaluator {
         val (value, updatedStore1) = evaluate(exp, env, store)
         val updatedStore2 = updatedStore1.setRef(Environment.apply(env, name), value)
         (value,updatedStore2)
+      case NewPairExpr(left, right) =>
+        val (evalLeft, updatedStore1) = store.newRef(evaluate(left, env, store)._1)
+        val (evalRight, updatedStore2) = updatedStore1.newRef(evaluate(right, env, updatedStore1)._1)
+        val l = updatedStore1.deRef(evalLeft)
+        val r = updatedStore2.deRef(evalRight)
+        (toPair(l,r), updatedStore2)
+      case GetLeftPairExpr(left) =>
+        val (evalLeft, updatedStore) = store.newRef(evaluate(left, env, store)._1)
+        val p = updatedStore.deRef(evalLeft).asInstanceOf[PairValue]
+        (p.value.lRef, updatedStore)
+      case GetRightPairExpr(right) =>
+        val (evalRight, updatedStore) = store.newRef(evaluate(right, env, store)._1)
+        val p = updatedStore.deRef(evalRight).asInstanceOf[PairValue]
+        (p.value.rRef, updatedStore)
+      case SetLeftPairExpr(left, right) =>
+        val (evalLeft, updatedStore1) = evalPairToRef(evaluate(left, env, store))
+        val (_, updatedStore2) = evalPairToRef(evaluate(right, env, updatedStore1))
+        val p = updatedStore2.deRef(evalLeft)
+        (p, updatedStore2)
+      case SetRightPairExpr(left, right) =>
+        val (evalLeft, updatedStore1) = evalPairToRef(evaluate(left, env, store))
+        val (evalRight, updatedStore2) = evalPairToRef(evaluate(right, env, updatedStore1))
+        val l = updatedStore2.deRef(evalLeft).asInstanceOf[PairValue]
+        val r = updatedStore2.deRef(evalRight)
+        val pair = PairValue(l.value.copy(rRef = r))
+        (pair, updatedStore2)
     }
 
   def evaluateList(exps: List[Expression], env: Environment, store: Store[Values]): (Values, Store[Values]) = exps match {
@@ -47,18 +74,21 @@ object Evaluator {
       evaluateList(tail, env, updatedStore)
   }
 
-  def let(input: String, environment: Environment = Environment.empty): String = {
+  def mutablePairs(input: String, environment: Environment = Environment.empty): String = {
     serialize(
       evaluate(fastparse.parse(input, Parser.expr(_)).get.value, environment, Store[Values](List()))
     )
   }
 
-  def serialize(v: (Values, Store[Values])): String =
-    v match {
-      case (IntegerValue(value), _) => value.toString
-      case (BooleanValue(value), _) => value.toString
-      case (ProcedureValue(value), _) => value.toString
-    }
+  def printRef(value: Values): String = value match {
+    case IntegerValue(value) => value.toString
+    case BooleanValue(value) => value.toString
+    case ProcedureValue(value) => value.toString
+    case PairValue(value) => s"pair(${printRef(value.lRef)}, ${printRef(value.rRef)})"
+    case RefValue(ref) => s"ref: ${ref.toString}"
+  }
+
+  def serialize(v: (Values, Store[Values])): String = printRef(v._1)
 
   def toNum(exprValue: Values): Integer =
     exprValue match {
@@ -82,6 +112,16 @@ object Evaluator {
     val (refValue, updatedStore) = store.newRef(value)
     val appliedProcedureResult = Environment.extend(proc.name, refValue, proc.environment)
     evaluate(proc.exp, appliedProcedureResult, updatedStore)
+  }
+
+  def toPair(evalLeft: Values, evalRight: Values): Values = {
+    Values.PairValue(MutPair(evalLeft, evalRight))
+  }
+
+  def evalPairToRef(evalStore: (Values, Store[Values])): (Ref, Store[Values]) = {
+    val eval = evalStore._1
+    val store = evalStore._2
+    store.newRef(eval)
   }
 
 }
