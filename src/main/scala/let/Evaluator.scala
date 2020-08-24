@@ -55,9 +55,11 @@ object Evaluator {
         (p.value.rRef, updatedStore)
       case SetLeftPairExpr(left, right) =>
         val (evalLeft, updatedStore1) = evalPairToRef(evaluate(left, env, store))
-        val (_, updatedStore2) = evalPairToRef(evaluate(right, env, updatedStore1))
-        val p = updatedStore2.deRef(evalLeft)
-        (p, updatedStore2)
+        val (evalRight, updatedStore2) = evalPairToRef(evaluate(right, env, updatedStore1))
+        val l = updatedStore2.deRef(evalLeft).asInstanceOf[PairValue]
+        val r = updatedStore2.deRef(evalRight)
+        val pair = PairValue(l.value.copy(lRef = r))
+        (pair, updatedStore2)
       case SetRightPairExpr(left, right) =>
         val (evalLeft, updatedStore1) = evalPairToRef(evaluate(left, env, store))
         val (evalRight, updatedStore2) = evalPairToRef(evaluate(right, env, updatedStore1))
@@ -84,7 +86,7 @@ object Evaluator {
     case IntegerValue(value) => value.toString
     case BooleanValue(value) => value.toString
     case ProcedureValue(value) => value.toString
-    case PairValue(value) => s"pair(${printRef(value.lRef)}, ${printRef(value.rRef)})"
+    case PairValue(value) => s"pair(${printRef(value.lRef)},${printRef(value.rRef)})"
     case RefValue(ref) => s"ref: ${ref.toString}"
   }
 

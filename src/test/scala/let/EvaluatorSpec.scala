@@ -84,7 +84,13 @@ class EvaluatorSpec extends AnyFlatSpec with Matchers {
 
   "Mutable-Pairs" should "work with setright mutable pairs and return 2" in {
     val input ="setright(pair(5, 6), 7)"
-    val result = "pair(5, 7)"
+    val result = "pair(5,7)"
+    Evaluator.mutablePairs(input) shouldEqual result
+  }
+
+  "Mutable-Pairs" should "work with setleft mutable pairs and return 2" in {
+    val input ="setleft(pair(5, 6), 7)"
+    val result = "pair(7,6)"
     Evaluator.mutablePairs(input) shouldEqual result
   }
 
