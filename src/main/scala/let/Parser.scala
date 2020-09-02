@@ -14,24 +14,17 @@ object Parser {
 
   def str0[_: P] = P(CharIn("a-zA-Z_") ~~ CharsWhileIn("a-zA-Z0-9_", 0)).!
 
-  def num[_: P] =
-    P(CharsWhileIn("0-9").!).map(s => Values.IntegerValue(s.toInt))
+  def num[_: P] = P(CharsWhileIn("0-9").!).map(s => ExpVal.IntegerValue(s.toInt))
 
   def zero[_: P] = P("zero?" ~/ "(" ~ expr ~ ")").map(Expression.ZeroExpr)
 
-  def ifExp[_: P] =
-    P("if" ~/ expr ~ "then" ~ expr ~ "else" ~ expr)
-      .map(Expression.CondExpr.tupled)
+  def ifExp[_: P] = P("if" ~/ expr ~ "then" ~ expr ~ "else" ~ expr).map(Expression.CondExpr.tupled)
 
-  def let[_: P] =
-    P("let" ~/ str0 ~/ "=" ~/ expr ~/ "in" ~/ expr)
-      .map(Expression.LetExpr.tupled)
+  def let[_: P] = P("let" ~/ str0 ~/ "=" ~/ expr ~/ "in" ~/ expr).map(Expression.LetExpr.tupled)
 
-  def diff[_: P] =
-    P("-" ~/ "(" ~ expr ~ "," ~ expr ~ ")").map(Expression.DiffExpr.tupled)
+  def diff[_: P] = P("-" ~/ "(" ~ expr ~ "," ~ expr ~ ")").map(Expression.DiffExpr.tupled)
 
-  def proc[_: P] =
-    P("proc" ~/ "(" ~ str0 ~ ")" ~ expr).map(Expression.ProcExpr.tupled)
+  def proc[_: P] = P("proc" ~/ "(" ~ str0 ~ ")" ~ expr).map(Expression.ProcExpr.tupled)
 
   def call[_: P] = P("(" ~/ expr ~/ expr ~/ ")").map(Expression.CallExpr.tupled)
 

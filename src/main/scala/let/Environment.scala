@@ -1,47 +1,35 @@
 package let
 
-import let.Values.ProcedureValue
+import let.ExpVal.ProcedureValue
 
-trait Environment
+sealed trait Environment
 case object Empty extends Environment
-case class Bind(idType: String, valueType: Values, environment: Environment)
-    extends Environment
-case class RecBind(
-    pname: String,
-    bvar: String,
-    pbody: Expression,
-    environment: Environment
-) extends Environment
+case class ExtendEnv(idType: String, valueType: ExpVal, environment: Environment) extends Environment
+case class ExtendEnvRec(pname: String, bvar: String, pbody: Expression, environment: Environment) extends Environment
 
 object Environment {
 
   def empty: Environment = Empty
 
-  def extend(
-      element: String,
-      value: Values,
-      environment: Environment
-  ): Environment = {
-    Bind(element, value, environment)
+  def extend(element: String, value: ExpVal, environment: Environment): Environment = {
+    ExtendEnv(element, value, environment)
   }
 
-  def extendRec(
-      pname: String,
-      bvar: String,
-      pbody: Expression,
-      environment: Environment
-  ): Environment = RecBind(pname, bvar, pbody, environment)
+  def extendRec(pname: String, bvar: String,
+                pbody: Expression, environment: Environment): Environment = {
+    ExtendEnvRec(pname, bvar, pbody, environment)
+  }
 
-  def apply(env: Environment, variable: String, value: Values): Values =
+  def apply(env: Environment, variable: String): ExpVal =
     env match {
       case Empty => throw new Exception(s"$variable not found")
-      case Bind(idType, valueType, environment) =>
-        if (variable == idType) valueType
-        else apply(environment, variable, valueType)
-      case RecBind(pname, bvar, pbody, environment) =>
-        if (variable == pname) {
-          ProcedureValue(Procedure(bvar, pbody, env))
-        } else apply(environment, variable, value)
+      case ExtendEnv(var1, val1, environment) =>
+        if (variable == var1) val1
+        else apply(environment, variable)
+      case ExtendEnvRec(fname, arg, body, env1) =>
+        if (variable == fname) {
+          ProcedureValue(Procedure(arg, body, env))
+        } else apply(env1, variable)
     }
 
 }
