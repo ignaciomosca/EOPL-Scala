@@ -1,35 +1,35 @@
 package let
 
-import let.Values.ProcedureValue
+import let.ExpVal.ProcedureValue
 
-case class Environment(bindings: Map[String, Int])
+sealed trait Environment
+case object Empty extends Environment
+case class ExtendEnv(idType: String, valueType: ExpVal, environment: Environment) extends Environment
+case class ExtendEnvRec(pname: String, bvar: String, pbody: Expression, environment: Environment) extends Environment
 
 object Environment {
 
-  def empty: Environment = Environment(Map.empty)
+  def empty: Environment = Empty
 
-  def extend(
-              element: String,
-              ref: Int,
-              environment: Environment
-  ): Environment = {
-    val updatedEnvironment = environment.bindings.updated(element, ref)
-    Environment(updatedEnvironment)
+  def extend(element: String, value: ExpVal, environment: Environment): Environment = {
+    ExtendEnv(element, value, environment)
   }
 
-  def extendRec(recProcs: List[(String, String, Expression)], env: Environment, store: Store[Values]) : (Environment, Store[Values]) = recProcs match {
-    case Nil => (env, store)
-    case (name,param,body)::next =>
-      val procedureValue = ProcedureValue(Procedure(param, body, env))
-      val (ref, updatedStore) = store.newRef(procedureValue)
-      val ext = extend(name, ref, env)
-      extendRec(next, ext, updatedStore)
+  def extendRec(pname: String, bvar: String,
+                pbody: Expression, environment: Environment): Environment = {
+    ExtendEnvRec(pname, bvar, pbody, environment)
   }
 
-  def apply(env: Environment, variable: String): Int =
-    env.bindings.get(variable) match {
-      case Some(value) => value
-      case None => throw new Exception(s"variable $variable not found")
+  def apply(env: Environment, variable: String): ExpVal =
+    env match {
+      case Empty => throw new Exception(s"$variable not found")
+      case ExtendEnv(var1, val1, environment) =>
+        if (variable == var1) val1
+        else apply(environment, variable)
+      case ExtendEnvRec(fname, arg, body, env1) =>
+        if (variable == fname) {
+          ProcedureValue(Procedure(arg, body, env))
+        } else apply(env1, variable)
     }
 
 }
